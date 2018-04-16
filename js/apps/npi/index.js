@@ -3,6 +3,8 @@
 
 'use strict';
 
+const Package = require("./package");
+
 function main(args, api, res) {
 	const io = api.stdio;
 
@@ -17,9 +19,15 @@ function main(args, api, res) {
 		io.writeLine("info      Show package info");
 		return res(0);
 	} else if(cmd == "info") {
-		io.setColor("magenta");
-		io.writeLine("npi info not implemented");
-		return res(1);
+		if(!args[0]) {
+			io.setColor("red");
+			io.writeLine("npi info: choose some package");
+			return res(1);
+		}
+
+		const pkg = new Package(args[0]);
+		console.log(pkg);
+		return res(0);
 	} else {
 		io.setColor("red");
 		io.writeLine("Unknown command");
