@@ -249,7 +249,12 @@ exports.request = (opt, cb) => {
   const port = or(opt.port, 80);
   const req = new ClientRequest();
 
-  req._headers = or(opt.headers, {});
+  req._headers = or(opt.headers, {
+    'Accept': '*/*',
+    'Connection': 'close',
+    'Host': opt.hostname,
+    'Pragma': 'no-cache'
+  });
   req._method = or(opt.method, 'GET');
   req._path = or(opt.path, '/');
   const onresolved = () => {
