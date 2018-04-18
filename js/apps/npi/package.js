@@ -29,7 +29,14 @@ class Package {
 	}
 
 	corsGet(url) {
-		return this.get("http://cors-anywhere.herokuapp.com/" + url);
+		return this.get("http://cors-anywhere.herokuapp.com/" + url)
+			.then(res => {
+				if(res.toLowerCase().indexOf("//www.herokucdn.com") > -1) {
+					throw new Error("cors-anywhere.herokuapp.com is down");
+				}
+
+				return res;
+			});
 	}
 
 	api(path) {
