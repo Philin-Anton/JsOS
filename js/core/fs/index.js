@@ -1,10 +1,26 @@
+/**
+ *    Copyright 2018 JsOS authors
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
 'use strict';
 
 const llfs = require('./low-level');
 const Utils = require('./utils');
 const utils = new Utils(llfs);
 
-const { log, success } = $$.logger;
+const { log, success, error, warn } = $$.logger;
 
 module.exports = {
   readdir (path, options, callback) {
@@ -86,6 +102,33 @@ module.exports = {
       callback(new Error('Is a directory'));
     }
   },
+
+  /** Returns file content (or buffer if encoding = 'buffer')
+   * @param  {string} path - Path to file
+   * @param  {string} [encoding='ascii'] - File encoding
+   * @returns {string} or Buffer
+   */
+  readFileSync (path, encoding = 'ascii') {
+    // TODO: buffer => binary
+    if (utils.isSystemPath(path)) {
+      log(`${path} is a system path`, { level: 'fs' });
+
+      const extpath = utils.extractSystemPath(path);
+
+      log(`${path} extracted to ${extpath}`, { level: 'fs' });
+
+      success('OK!', { from: 'FS->readFile->System', level: 'fs' });
+
+      return encoding === 'buffer'
+        ? __SYSCALL.initrdReadFileBuffer(extpath)
+        : __SYSCALL.initrdReadFile(extpath);
+    }
+
+    warn('readFileSync for external pathes doesn\'t implemented!', { from: 'fs->readFileSync' });
+
+    return ''; // TODO:
+  },
+
   writeFile (path, data, options = () => {}, callback = options) {
     let resolved = null;
 
