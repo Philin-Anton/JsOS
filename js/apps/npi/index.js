@@ -26,8 +26,18 @@ function main(args, api, res) {
 		}
 
 		const pkg = new Package(args[0]);
-		console.log(pkg);
-		return res(0);
+		pkg.getInfo(info => {
+			io.setColor("white");
+			for(const key of Object.keys(info)) {
+				let value = info[key];
+				if(value === null) {
+					value = "<null>";
+				}
+
+				io.writeLine(key + " ".repeat(10 - key.length) + value);
+			}
+			res(0);
+		});
 	} else {
 		io.setColor("red");
 		io.writeLine("Unknown command");

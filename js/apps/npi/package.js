@@ -37,9 +37,38 @@ class Package {
 		});
 	}
 
-	getInfo() {
-		this.api("repos/JsOS-Team/NPI-pkg/contents", files => {
-			console.log("Files:", files);
+	readFile(path, cb) {
+		this.api("repos/JsOS-Team/NPI-pkg/contents/" + path, file => {
+			if(file.type !== "file") {
+				cb(null);
+			} else {
+				file.content = Buffer.from(file.content, "base64");
+				cb(file);
+			}
+		});
+	}
+	readDir(path, cb) {
+		this.api("repos/JsOS-Team/NPI-pkg/contents/" + path, files => {
+			if(!Array.isArray(files)) {
+				cb(null);
+			} else {
+				cb(files);
+			}
+		});
+	}
+
+	getInfo(cb) {
+		let info = {
+			name: this.name
+		};
+		this.readFile(`packages/${this.name}/module`, module => {
+			if(module) {
+				info.module = module.content.toString("ascii");
+			} else {
+				info.module = null;
+			}
+
+			cb(info);
 		});
 	}
 };
