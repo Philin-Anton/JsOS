@@ -110,8 +110,10 @@ class Package {
 	}
 
 	install(io) {
+		io.writeLine("Getting information");
 		return this.getInfo()
 			.then(info => {
+				io.writeLine("Gathering package");
 				return this.readTree(info.sha);
 			})
 			.then(tree => {
@@ -124,7 +126,47 @@ class Package {
 		}
 
 		io.writeLine("Downloading " + file.path);
-		// TODO
+
+		return this.readBlob(file.sha)
+			.then(blob => {
+				const code = blob.content.toString("utf8");
+				const parts = ["", "node_modules", "npi", this.name, ...file.path.split("/")];
+				this.createModule(parts, code);
+				io.writeLine("Installed " + file.path);
+			});
+	}
+
+	createModule(parts, code) {
+		const currentModule = global.module;
+		const Module = currentModule.constructor; // Hack :)
+
+		let module = new Module(parts);
+		require.cache[parts.join("/")] = module;
+		global.module = module;
+
+		let lastPart = parts.slice(-1)[0];
+		if(lastPart.endsWith(".json")) {
+			module.exports = JSON.parse(code);
+		} else {
+			new Function("require, exports, module, __filename, __dirname", code)(
+				(
+					thisModule => {
+						let f = path => {
+							f.cache = thisModule.require.cache;
+							return thisModule.require(path);
+						}
+						return f;
+					}
+				)(module),
+				module.exports,
+				module,
+				module.filename,
+				module.dirname
+			);
+		}
+
+		global.module = currentModule;
+		return module.exports;
 	}
 };
 
