@@ -1,5 +1,5 @@
 {
-    "editor.tabSize": 2,
+	"editor.tabSize": 2,
     "licenser.author": "JsOS authors",
     "licenser.license": "AL2",
     "licenser.projectName": "JsOS",
@@ -15,5 +15,7 @@
             "backgroundColor": "rgb(0, 247, 255)",
             "color": "#000"
         }
-    ]
-}
+    ],
+		"editor.detectIndentation": false,
+		"editor.insertSpaces": true
+	}
