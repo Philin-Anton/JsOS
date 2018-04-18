@@ -1,3 +1,4 @@
+// Copyright 2018-present JsOS.js project authors
 // Copyright 2015-present runtime.js project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -193,6 +194,7 @@
           this.filename = pathComponents.join('/');
           this.dirname = this.dirComponents.length > 1 ? this.dirComponents.join('/') : '/';
           this.exports = {};
+          this.require.cache = cache;
         }
         require (path, nocache = false) {
           let module = this;
@@ -230,7 +232,7 @@
           } else {
             /* eslint-disable max-len */
             evalScriptFn(
-              `((require,exports,module,__filename,__dirname) => {${content}})(((m) => {return function(path){return m.require(path)}})(global.module),global.module.exports,global.module,global.module.filename,global.module.dirname)`,
+              `((require,exports,module,__filename,__dirname) => {${content}})(((m) => {return function require(path){require.cache=m.require.cache;return m.require(path)}})(global.module),global.module.exports,global.module,global.module.filename,global.module.dirname)`,
               displayPath);
             /* eslint-enable max-len */
           }
