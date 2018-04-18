@@ -48,7 +48,7 @@ class Package {
 				}
 			});
 	}
-	readDir(path, cb) {
+	readDir(path) {
 		return this.api("repos/JsOS-Team/NPI-pkg/contents/" + path)
 			.then(files => {
 				if(!Array.isArray(files)) {
@@ -58,11 +58,11 @@ class Package {
 				}
 			});
 	}
-	readTree(sha, cb) {
+	readTree(sha) {
 		return this.api("repos/JsOS-Team/NPI-pkg/git/trees/" + sha + "?recursive=1");
 	}
 
-	getInfo(cb) {
+	getInfo() {
 		let info = {
 			name: this.name
 		};
@@ -76,6 +76,7 @@ class Package {
 					throw new Error("Package not found");
 				}
 				info.url = pkg.html_url;
+				info.sha = pkg.sha;
 
 				// Get module
 				return this.readFile(`packages/${this.name}/module`)
