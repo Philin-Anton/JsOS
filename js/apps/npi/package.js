@@ -9,7 +9,8 @@ class Package {
 	get(path, cb) {
 		const opt = url.parse(path);
 		opt.headers = {
-			"X-Requested-With": "JsOS/NPI"
+			"X-Requested-With": "JsOS/NPI",
+			"User-Agent": "JsOS/NPI"
 		};
 
 		return http.get(opt, res => {
@@ -30,9 +31,15 @@ class Package {
 		return this.get("http://cors-anywhere.herokuapp.com/" + url, cb);
 	}
 
+	api(path, cb) {
+		this.corsGet("https://api.github.com/" + path, str => {
+			cb(JSON.parse(str));
+		});
+	}
+
 	getInfo() {
-		this.corsGet("", str => {
-			console.log(str);
+		this.api("repos/JsOS-Team/NPI-pkg/contents", files => {
+			console.log("Files:", files);
 		});
 	}
 };
