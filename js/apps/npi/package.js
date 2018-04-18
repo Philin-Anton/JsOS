@@ -66,11 +66,12 @@ class Package {
 		let info = {
 			name: this.name
 		};
+		let pkg;
 
 		// Get package
 		return this.readDir("packages")
 			.then(packages => {
-				let pkg = packages.find(file => file.name == this.name);
+				pkg = packages.find(file => file.name == this.name);
 				if(!pkg) {
 					throw new Error("Package not found");
 				}
@@ -85,8 +86,19 @@ class Package {
 					});
 			})
 			.then(() => {
-				return info;
-			});
+				// Read files
+				return this.readTree(pkg.sha);
+			}).then(tree => {
+				info.files = 0;
+				info.size = 0;
+				tree.tree.forEach(file => {
+					if(file.type == "blob") {
+						info.files++;
+						info.size += file.size;
+					}
+				});
+			})
+			.then(() => info);
 	}
 };
 
