@@ -26,7 +26,7 @@ const cmds = {
     'description': 'Shut down the computer',
     'usage':       'shutdown',
     run (args, f, res) {
-      warn('Shuting down...');
+      warn('Shutting down...');
       $$.machine.shutdown();
 
       return res(0);
@@ -150,7 +150,7 @@ const cmds = {
     },
   },
   'install': {
-    'description': 'Install the applications',
+    'description': 'Install applications',
     'usage':       'install <app>',
     run (app, f, res) {
       if ($$.appman.install(app.trim())) {
@@ -305,16 +305,21 @@ const cmds = {
     run (args, f, result) {
       const http = require('http');
 
-      http.get(args, (res) => {
-        res.setEncoding('utf8');
-        res.on('data', (chunk) => {
-          f.stdio.write(chunk);
+      try {
+        http.get(args, (res) => {
+          res.setEncoding('utf8');
+          res.on('data', (chunk) => {
+            f.stdio.write(chunk);
+          });
+          res.on('end', () => {
+            f.stdio.writeLine('');
+            result(0);
+          });
         });
-        res.on('end', () => {
-          f.stdio.writeLine('');
-          result(0);
-        });
-      });
+      } catch(err) {
+        f.stdio.writeError('wget command error')
+        result(1)
+      }
     },
   },
   'meminfo': {

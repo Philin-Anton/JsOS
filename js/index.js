@@ -22,7 +22,7 @@ require('module-singleton')(packagejson);
 require('./version');
 
 console.log(`JsOS runtime v${packagejson.version}`);
-console.log('Prepare to loading...');
+console.log('Preparing to load...');
 
 const isDebug = packagejson.runtimejs.debug;
 

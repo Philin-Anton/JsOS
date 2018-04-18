@@ -94,7 +94,11 @@ function lookup (hostname, opts, cb) {
     for (const i of [...data.results.keys()]) {
       const res = data.results[i];
 
-      if (!opts.all && i === 0) {
+      if(!res.address) {
+        continue;
+      }
+
+      if (!opts.all) {
         const addr = res.address.join('.');
 
         if (cb) cb(null, addr, 4);
