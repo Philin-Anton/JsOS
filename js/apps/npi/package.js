@@ -59,19 +59,27 @@ class Package {
 
 	getInfo(cb) {
 		let info = {
-			name: this.name,
-			url: "https://github.com/JsOS-Team/NPI-pkg/tree/master/packages/" + this.name
+			name: this.name
 		};
 
-		// Get module
-		this.readFile(`packages/${this.name}/module`, module => {
-			if(module) {
-				info.module = module.content.toString("ascii");
-			} else {
-				info.module = null;
+		// Get package
+		this.readDir(`packages`, packages => {
+			let pkg = packages.find(file => file.name == this.name);
+			if(!pkg) {
+				return cb(null);
 			}
+			info.url = pkg.html_url;
 
-			cb(info);
+			// Get module
+			this.readFile(`packages/${this.name}/module`, module => {
+				if(module) {
+					info.module = module.content.toString("ascii");
+				} else {
+					info.module = null;
+				}
+
+				cb(info);
+			});
 		});
 	}
 };

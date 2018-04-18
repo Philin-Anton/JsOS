@@ -27,6 +27,11 @@ function main(args, api, res) {
 
 		const pkg = new Package(args[0]);
 		pkg.getInfo(info => {
+			if(!info) {
+				io.writeError("Package doesn't exist");
+				return res(1);
+			}
+
 			io.setColor("white");
 			for(const key of Object.keys(info)) {
 				let value = info[key];
