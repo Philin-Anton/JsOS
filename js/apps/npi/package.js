@@ -39,13 +39,13 @@ class Package {
 			});
 	}
 
-	api(path) {
+	gitHubApi(path) {
 		return this.corsGet("https://api.github.com/" + path)
 			.then(JSON.parse);
 	}
 
 	readFile(path) {
-		return this.api("repos/JsOS-Team/NPI-pkg/contents/" + path)
+		return this.gitHubApi("repos/JsOS-Team/NPI-pkg/contents/" + path)
 			.then(file => {
 				if(file.type !== "file") {
 					throw new Error(path + " is not a file");
@@ -56,7 +56,7 @@ class Package {
 			});
 	}
 	readDir(path) {
-		return this.api("repos/JsOS-Team/NPI-pkg/contents/" + path)
+		return this.gitHubApi("repos/JsOS-Team/NPI-pkg/contents/" + path)
 			.then(files => {
 				if(!Array.isArray(files)) {
 					throw new Error(path + " is not a directory");
@@ -66,14 +66,14 @@ class Package {
 			});
 	}
 	readBlob(sha) {
-		return this.api("repos/JsOS-Team/NPI-pkg/git/blobs/" + sha)
+		return this.gitHubApi("repos/JsOS-Team/NPI-pkg/git/blobs/" + sha)
 			.then(blob => {
 				blob.content = Buffer.from(blob.content, blob.encoding);
 				return blob;
 			});
 	}
 	readTree(sha) {
-		return this.api("repos/JsOS-Team/NPI-pkg/git/trees/" + sha + "?recursive=1");
+		return this.gitHubApi("repos/JsOS-Team/NPI-pkg/git/trees/" + sha + "?recursive=1");
 	}
 
 	getInfo() {
