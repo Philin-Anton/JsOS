@@ -33,7 +33,7 @@ class Partition {
 }
 
 function getDeviceByName (name) {
-  let iface;
+  let iface = null;
 
   for (const device of $$.block.devices) {
     if (device.name === name) iface = device;

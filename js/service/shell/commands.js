@@ -1,23 +1,23 @@
-// Copyright 2017-present jsos project authors
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/**
+ *    Copyright 2018 JsOS authors
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 
 'use strict';
 
 const processor = require('./index.js');
 const { log, warn } = $$.logger;
-
-/* global $$ */
 
 debug('Loading commands...');
 
@@ -241,7 +241,7 @@ const cmds = {
     'description': 'List files in directory',
     'usage':       'ls /<drive>/<partition>',
     run (args, f, res) {
-      const fs = require('../../core/fs');
+      const fs = require('fs');
       // const filesize = require('../../utils/filesize');
 
       fs.readdir(args, 'utf8', (err, list) => {
@@ -254,7 +254,7 @@ const cmds = {
         res(0);
       });
 
-      /* const fs = require('../../core/fs');
+      /* const fs = require('fs');
       const device = fs.getDeviceByName(args[0]);
       const partition = +(args[1][1]);
       fs.getPartitions(device).then((parts) => parts[partition].getFilesystem())
@@ -270,7 +270,7 @@ const cmds = {
     'description': 'Show file contents',
     'usage':       'cat <file>',
     run (args, f, res) {
-      const fs = require('../../core/fs');
+      const fs = require('fs');
 
       fs.readFile(args, 'utf8', (err, data) => {
         if (err) {
@@ -279,7 +279,8 @@ const cmds = {
           return res(1);
         }
         f.stdio.write(data);
-        res(0);
+
+        return res(0);
       });
     },
   },
@@ -287,7 +288,7 @@ const cmds = {
     'description': 'Make directory',
     'usage':       'mkdir <path>',
     run (args, f, res) {
-      const fs = require('../../core/fs');
+      const fs = require('fs');
 
       fs.mkdir(args, (err) => {
         if (err) {
@@ -316,9 +317,9 @@ const cmds = {
             result(0);
           });
         });
-      } catch(err) {
-        f.stdio.writeError('wget command error')
-        result(1)
+      } catch (err) {
+        f.stdio.writeError('wget command error');
+        result(1);
       }
     },
   },

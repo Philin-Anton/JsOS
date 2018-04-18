@@ -23,9 +23,29 @@ const utils = new Utils(llfs);
 const { log, success, error, warn } = $$.logger;
 
 module.exports = {
-  readdir (path, options, callback) {
-    callback = callback || options;
+  readdir (path, options = () => {}, callback = options) {
     let resolved = null;
+
+    if (utils.isSystemPath(path)) {
+      if (path[path.length - 1] !== '/') path = [path, '/'].join('');
+
+      log(`${path} is a system path`, { level: 'fs' });
+
+      const extpath = utils.extractSystemPath(path);
+
+      log(`${path} extracted to ${extpath}`, { level: 'fs' });
+
+      const find = __SYSCALL.initrdListFiles();
+      const dirs = new Set(find.map((el) => el.slice(extpath.length).split('/')[0]));
+      // console.log(`>> extpath: ${extpath};\n out: ${el.slice(extpath.length).split('/')[0]}`);
+
+      console.log(dirs);
+
+      success('OK!', { from: 'FS->readdir->System', level: 'fs' });
+      callback(null, Array.from(dirs).sort());
+
+      return;
+    }
 
     try {
       resolved = utils.resolvePath(path);
@@ -35,7 +55,10 @@ module.exports = {
       return;
     }
     if (resolved.level === 0) {
-      callback(null, $$.block.devices.map((device) => device.name));
+      const devices = $$.block.devices.map((device) => device.name);
+
+      devices.push('system');
+      callback(null, devices);
     } else if (resolved.level >= 1) {
       llfs.getPartitions(resolved.parts[0]).then((partitions) => {
         if (resolved.level >= 2) {
