@@ -118,6 +118,22 @@ class Package {
 			})
 			.then(tree => {
 				return Promise.all(tree.tree.map(file => this.installFile(file, io)));
+			})
+			.then(() => {
+				const app = require(`npi/${this.name}`);
+
+				// Install application
+				PERSISTENCE.Apps[this.name] = {
+					run: app.call,
+					commands: app.commands
+				};
+
+				// Create links
+				for(const command of app.commands) {
+					PERSISTENCE.Apps._commands[command] = this.name;
+				}
+
+				io.writeLine(`Installed package ${this.name}`);
 			});
 	}
 	installFile(file, io) {
