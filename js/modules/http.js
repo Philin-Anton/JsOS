@@ -12,7 +12,26 @@ const url = require('url');
 const dns = require('dns');
 
 const or = (...objs) => {
-  for (const obj of objs) if (obj !== undefined && obj !== null) return obj;
+  let recursiveObj = {};
+  let isRecursive = false;
+
+  for (const obj of objs) {
+    if (obj !== undefined && obj !== null) {
+      if (typeof obj == "object") {
+        Object.assign(recursiveObj, obj);
+        isRecursive = true;
+      }
+      if (!isRecursive) {
+        return obj;
+      }
+    }
+  }
+
+  if (isRecursive) {
+    return recursiveObj;
+  } else {
+    return null;
+  }
 };
 
 
