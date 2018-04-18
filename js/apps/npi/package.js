@@ -59,8 +59,11 @@ class Package {
 
 	getInfo(cb) {
 		let info = {
-			name: this.name
+			name: this.name,
+			url: "https://github.com/JsOS-Team/NPI-pkg/tree/master/packages/" + this.name
 		};
+
+		// Get module
 		this.readFile(`packages/${this.name}/module`, module => {
 			if(module) {
 				info.module = module.content.toString("ascii");
