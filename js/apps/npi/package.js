@@ -101,6 +101,24 @@ class Package {
 			})
 			.then(() => info);
 	}
+
+	install(io) {
+		return this.getInfo()
+			.then(info => {
+				return this.readTree(info.sha);
+			})
+			.then(tree => {
+				return Promise.all(tree.tree.map(file => this.installFile(file, io)));
+			});
+	}
+	installFile(file, io) {
+		if(file.type != "blob") {
+			return;
+		}
+
+		io.writeLine("Downloading " + file.path);
+		// TODO
+	}
 };
 
 module.exports = Package;

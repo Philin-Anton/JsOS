@@ -42,6 +42,22 @@ function main(args, api, res) {
 				io.writeError(e.message);
 				res(1);
 			});
+	} else if(cmd == "install") {
+		if(!args[0]) {
+			io.setColor("red");
+			io.writeLine("npi install: choose some package");
+			return res(1);
+		}
+
+		const pkg = new Package(args[0]);
+		pkg.install(io)
+			.then(
+				() => res(0),
+				e => {
+					io.writeError(e);
+					res(1);
+				}
+			);
 	} else {
 		io.setColor("red");
 		io.writeLine("Unknown command");
