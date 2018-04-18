@@ -26,23 +26,22 @@ function main(args, api, res) {
 		}
 
 		const pkg = new Package(args[0]);
-		pkg.getInfo(info => {
-			if(!info) {
-				io.writeError("Package doesn't exist");
-				return res(1);
-			}
+		pkg.getInfo()
+			.then(info => {
+				io.setColor("white");
+				for(const key of Object.keys(info)) {
+					let value = info[key];
+					if(value === null) {
+						value = "<null>";
+					}
 
-			io.setColor("white");
-			for(const key of Object.keys(info)) {
-				let value = info[key];
-				if(value === null) {
-					value = "<null>";
+					io.writeLine(key + " ".repeat(10 - key.length) + value);
 				}
-
-				io.writeLine(key + " ".repeat(10 - key.length) + value);
-			}
-			res(0);
-		});
+				res(0);
+			}, e => {
+				io.writeError(e.message);
+				res(1);
+			});
 	} else {
 		io.setColor("red");
 		io.writeLine("Unknown command");

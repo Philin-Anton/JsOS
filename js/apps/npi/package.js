@@ -13,48 +13,53 @@ class Package {
 			"User-Agent": "JsOS/NPI"
 		};
 
-		return http.get(opt, res => {
-			let str = "";
-			res.setEncoding("utf8");
-			res.on("data", chunk => {
-				str += chunk;
+		return new Promise((resolve, reject) => {
+			http.get(opt, res => {
+				let str = "";
+				res.setEncoding("utf8");
+				res.on("data", chunk => {
+					str += chunk;
+				});
+				res.on("end", () => {
+					resolve(str);
+				});
+				res.on("error", reject);
 			});
-			res.on("end", () => {
-				if(cb) {
-					cb(str);
+		});
+	}
+
+	corsGet(url) {
+		return this.get("http://cors-anywhere.herokuapp.com/" + url);
+	}
+
+	api(path) {
+		return this.corsGet("https://api.github.com/" + path)
+			.then(JSON.parse);
+	}
+
+	readFile(path) {
+		return this.api("repos/JsOS-Team/NPI-pkg/contents/" + path)
+			.then(file => {
+				if(file.type !== "file") {
+					throw new Error(path + " is not a file");
+				} else {
+					file.content = Buffer.from(file.content, "base64");
+					return file;
 				}
 			});
-		});
-	}
-
-	corsGet(url, cb) {
-		return this.get("http://cors-anywhere.herokuapp.com/" + url, cb);
-	}
-
-	api(path, cb) {
-		this.corsGet("https://api.github.com/" + path, str => {
-			cb(JSON.parse(str));
-		});
-	}
-
-	readFile(path, cb) {
-		this.api("repos/JsOS-Team/NPI-pkg/contents/" + path, file => {
-			if(file.type !== "file") {
-				cb(null);
-			} else {
-				file.content = Buffer.from(file.content, "base64");
-				cb(file);
-			}
-		});
 	}
 	readDir(path, cb) {
-		this.api("repos/JsOS-Team/NPI-pkg/contents/" + path, files => {
-			if(!Array.isArray(files)) {
-				cb(null);
-			} else {
-				cb(files);
-			}
-		});
+		return this.api("repos/JsOS-Team/NPI-pkg/contents/" + path)
+			.then(files => {
+				if(!Array.isArray(files)) {
+					throw new Error(path + " is not a directory");
+				} else {
+					return files;
+				}
+			});
+	}
+	readTree(sha, cb) {
+		return this.api("repos/JsOS-Team/NPI-pkg/git/trees/" + sha + "?recursive=1");
 	}
 
 	getInfo(cb) {
@@ -63,24 +68,25 @@ class Package {
 		};
 
 		// Get package
-		this.readDir(`packages`, packages => {
-			let pkg = packages.find(file => file.name == this.name);
-			if(!pkg) {
-				return cb(null);
-			}
-			info.url = pkg.html_url;
-
-			// Get module
-			this.readFile(`packages/${this.name}/module`, module => {
-				if(module) {
-					info.module = module.content.toString("ascii");
-				} else {
-					info.module = null;
+		return this.readDir("packages")
+			.then(packages => {
+				let pkg = packages.find(file => file.name == this.name);
+				if(!pkg) {
+					throw new Error("Package not found");
 				}
+				info.url = pkg.html_url;
 
-				cb(info);
+				// Get module
+				return this.readFile(`packages/${this.name}/module`)
+					.then(module => {
+						info.module = module.content.toString("ascii");
+					}, () => {
+						info.module = null;
+					});
+			})
+			.then(() => {
+				return info;
 			});
-		});
 	}
 };
 
