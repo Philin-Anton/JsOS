@@ -1,12 +1,18 @@
 const http = require("http");
+const url = require("url");
 
 class Package {
 	constructor(name) {
 		this.name = name;
 	}
 
-	get(url, cb) {
-		return http.get(url, res => {
+	get(path, cb) {
+		const opt = url.parse(path);
+		opt.headers = {
+			"X-Requested-With": "JsOS/NPI"
+		};
+
+		return http.get(opt, res => {
 			let str = "";
 			res.setEncoding("utf8");
 			res.on("data", chunk => {
