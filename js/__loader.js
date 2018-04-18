@@ -60,10 +60,10 @@
       }
 
       function loadAsFile (path) {
-        if (existsFileFn(path)) return path;
-        if (existsFileFn(`${path}.js`)) return `${path}.js`;
-        if (existsFileFn(`${path}.json`)) return `${path}.json`;
-        if (existsFileFn(`${path}.node`)) return `${path}.node`;
+        if (existsFileFn(path) || cache[path]) return path;
+        if (existsFileFn(`${path}.js`) || cache[`${path}.js`]) return `${path}.js`;
+        if (existsFileFn(`${path}.json`) || cache[`${path}.json`]) return `${path}.json`;
+        if (existsFileFn(`${path}.node`) || cache[`${path}.node`]) return `${path}.node`;
 
         return null;
       }
