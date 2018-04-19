@@ -42,7 +42,17 @@ class Package {
 
 	gitHubApi(path) {
 		return this.corsGet("https://api.github.com/" + path)
-			.then(JSON.parse);
+			.then(JSON.parse)
+			.then(res => {
+				if(typeof res.message === "string") {
+					if(res.message.indexOf("rate limit") > -1) {
+						throw new Error("GitHub API rate limit exceeded");
+					}
+					throw new Error(res.message);
+				}
+
+				return res;
+			});
 	}
 
 	readFile(path) {
@@ -86,7 +96,7 @@ class Package {
 		// Get package
 		return this.readDir("packages")
 			.then(packages => {
-				pkg = packages.find(file => file.name == this.name);
+				pkg = packages.find(file => file.name === this.name);
 				if(!pkg) {
 					throw new Error("Package not found");
 				}
@@ -108,7 +118,7 @@ class Package {
 				info.files = 0;
 				info.size = 0;
 				tree.tree.forEach(file => {
-					if(file.type == "blob") {
+					if(file.type === "blob") {
 						info.files++;
 						info.size += file.size;
 					}
