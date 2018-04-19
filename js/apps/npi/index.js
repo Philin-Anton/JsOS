@@ -14,11 +14,33 @@ function main(args, api, res) {
 	switch(cmd) {
 		case "":
 		case "help": {
-			io.setColor("yellow");
-			io.writeLine("JsOS/NPI - No Problem Installer");
-			io.writeLine("Commands:");
-			io.writeLine("help      Show command or subcommand help");
-			io.writeLine("info      Show package info");
+			switch (args[0]) {
+				case "f":
+				case "info":
+					io.setColor("yellow");
+					io.writeLine("JsOS/NPI - No Problem Installer");
+					io.writeLine("info <pkg>      Show info about <pkg> package");
+					io.writeLine("f <pkg>         <alias>");
+					break;
+
+				case "i":
+				case "install":
+					io.setColor("yellow");
+					io.writeLine("JsOS/NPI - No Problem Installer");
+					io.writeLine("install <pkg>   Install <pkg> package");
+					io.writeLine("i <pkg>         <alias>");
+					break;
+
+				default:
+					io.setColor("yellow");
+					io.writeLine("JsOS/NPI - No Problem Installer");
+					io.writeLine("Commands:");
+					io.writeLine("help            Show command or subcommand help");
+					io.writeLine("info            Show package info");
+					io.writeLine("install         Install package");
+					break;
+			}
+
 			return res(0);
 		}
 
