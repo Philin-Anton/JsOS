@@ -195,6 +195,7 @@
           this.dirname = this.dirComponents.length > 1 ? this.dirComponents.join('/') : '/';
           this.exports = {};
           this.require.cache = cache;
+          this.virtual = null;
         }
         require (path, nocache = false) {
           let module = this;
@@ -209,21 +210,26 @@
           const displayPath = resolvedPath;
           const cacheKey = pathComponents.join('/');
 
-          if (cache[cacheKey] && !nocache) {
+          if (cache[cacheKey] && cache[cacheKey].virtual === null && !nocache) {
             return cache[cacheKey].exports;
           }
 
           const currentModule = global.module;
 
-          module = new Module(pathComponents);
-          cache[cacheKey] = module;
-          global.module = module;
-
           if (endsWith(resolvedPath, '.node')) {
             throwError(new Error(`Native Node.js modules are not supported '${resolvedPath}'`));
           }
 
-          const content = readFileFn(resolvedPath);
+          let content;
+          if (cache[cacheKey] && cache[cacheKey].virtual !== null) {
+            module = cache[cacheKey];
+            content = module.virtual;
+          } else {
+            module = new Module(pathComponents);
+            cache[cacheKey] = module;
+            content = readFileFn(resolvedPath);
+          }
+          global.module = module;
 
           if (!content) throwError(new Error(`Cannot load module '${resolvedPath}'`));
 
