@@ -187,6 +187,16 @@
         return loadNodeModules(resolveFrom, pathComponents);
       }
 
+      function register (path, code) {
+        // Add virtual module
+        const currentModule = global.module;
+
+        const module = new Module(path.split("/"));
+        module.virtual = code;
+        cache[path] = module;
+        return module;
+      }
+
       class Module {
         constructor (pathComponents) {
           this.dirComponents = pathComponents.slice(0, -1);
@@ -195,6 +205,7 @@
           this.dirname = this.dirComponents.length > 1 ? this.dirComponents.join('/') : '/';
           this.exports = {};
           this.require.cache = cache;
+          this.require.register = register;
           this.virtual = null;
         }
         require (path, nocache = false) {
@@ -238,7 +249,7 @@
           } else {
             /* eslint-disable max-len */
             evalScriptFn(
-              `((require,exports,module,__filename,__dirname) => {${content}})(((m) => {return function require(path){require.cache=m.require.cache;return m.require(path)}})(global.module),global.module.exports,global.module,global.module.filename,global.module.dirname)`,
+              `((require,exports,module,__filename,__dirname) => {${content}})(((m) => {return function require(path){require.cache=m.require.cache;require.register=m.require.register;return m.require(path)}})(global.module),global.module.exports,global.module,global.module.filename,global.module.dirname)`,
               displayPath);
             /* eslint-enable max-len */
           }
