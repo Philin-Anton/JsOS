@@ -109,6 +109,9 @@ class Package {
 	readTree(sha) {
 		return this.gitHubApi("repos/JsOS-Team/NPI-pkg/git/trees/" + sha + "?recursive=1");
 	}
+	readFilePages(path) {
+		return this.corsGet("https://jsos-team.github.io/NPI-pkg/" + path);
+	}
 
 	getInfo() {
 		let info = {
@@ -167,6 +170,8 @@ class Package {
 					});
 			})
 			.then(() => {
+				io.writeLine(`Installing package ${this.name}`);
+
 				const app = require(`npi/${this.name}`);
 
 				// Install application
@@ -190,50 +195,15 @@ class Package {
 
 		io.writeLine("Downloading " + file.path);
 
-		return this.readBlob(file.sha)
-			.then(blob => {
+		return this.readFilePages(`packages/${this.name}/${file.path}`)
+			.then(code => {
 				if(this.installationStopped) {
 					return;
 				}
 
-				const code = blob.content.toString("utf8");
-				const parts = ["", "node_modules", "npi", this.name, ...file.path.split("/")];
-				this.createModule(parts, code);
+				require.register(`/node_modules/npi/${this.name}/${file.path}`, code);
 				io.writeLine("Installed " + file.path);
 			});
-	}
-
-	createModule(parts, code) {
-		const currentModule = global.module;
-		const Module = currentModule.constructor; // Hack :)
-
-		let module = new Module(parts);
-		require.cache[parts.join("/")] = module;
-		global.module = module;
-
-		let lastPart = parts.slice(-1)[0];
-		if(lastPart.endsWith(".json")) {
-			module.exports = JSON.parse(code);
-		} else {
-			new Function("require, exports, module, __filename, __dirname", code)(
-				(
-					thisModule => {
-						let f = path => {
-							f.cache = thisModule.require.cache;
-							return thisModule.require(path);
-						}
-						return f;
-					}
-				)(module),
-				module.exports,
-				module,
-				module.filename,
-				module.dirname
-			);
-		}
-
-		global.module = currentModule;
-		return module.exports;
 	}
 };
 
