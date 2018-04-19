@@ -14,7 +14,9 @@ class Package {
 			"User-Agent": "JsOS/NPI"
 		};
 
-		return new Promise((resolve, reject) => {
+		function once(resolve, reject, tries) {
+			let done = false;
+
 			http.get(opt, res => {
 				let str = "";
 				res.setEncoding("utf8");
@@ -22,10 +24,31 @@ class Package {
 					str += chunk;
 				});
 				res.on("end", () => {
+					done = true;
 					resolve(str);
 				});
-				res.on("error", reject);
+				res.on("error", e => {
+					done = true;
+					reject(e);
+				});
+
+				setTimeout(() => {
+					if(done) {
+						return;
+					}
+
+					if(tries === 0) {
+						reject(new Error("Timeout on " + path));
+					} else {
+						once(resolve, reject, tries - 1);
+					}
+				}, 20000);
 			});
+		}
+
+		// Try 3 times on timeout
+		return new Promise((resolve, reject) => {
+			once(resolve, reject, 3);
 		});
 	}
 
