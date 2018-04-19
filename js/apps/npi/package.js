@@ -4,6 +4,7 @@ const url = require("url");
 class Package {
 	constructor(name) {
 		this.name = name;
+		this.installationStopped = false;
 	}
 
 	get(path, cb) {
@@ -117,6 +118,8 @@ class Package {
 	}
 
 	install(io) {
+		this.installationStopped = false;
+
 		io.writeLine("Getting information");
 		return this.getInfo()
 			.then(info => {
@@ -124,7 +127,11 @@ class Package {
 				return this.readTree(info.sha);
 			})
 			.then(tree => {
-				return Promise.all(tree.tree.map(file => this.installFile(file, io)));
+				return Promise.all(tree.tree.map(file => this.installFile(file, io)))
+					.catch(e => {
+						this.installationStopped = true;
+						throw e;
+					});
 			})
 			.then(() => {
 				const app = require(`npi/${this.name}`);
@@ -152,6 +159,10 @@ class Package {
 
 		return this.readBlob(file.sha)
 			.then(blob => {
+				if(this.installationStopped) {
+					return;
+				}
+
 				const code = blob.content.toString("utf8");
 				const parts = ["", "node_modules", "npi", this.name, ...file.path.split("/")];
 				this.createModule(parts, code);
