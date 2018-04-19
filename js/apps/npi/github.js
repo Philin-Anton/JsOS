@@ -74,17 +74,6 @@ class GitHub {
 	}
 
 
-	readFile(path) {
-		return this.api("repos/JsOS-Team/NPI-pkg/contents/" + path)
-			.then(file => {
-				if(file.type !== "file") {
-					throw new Error(path + " is not a file");
-				} else {
-					file.content = Buffer.from(file.content, "base64");
-					return file;
-				}
-			});
-	}
 	readDir(path) {
 		return this.api("repos/JsOS-Team/NPI-pkg/contents/" + path)
 			.then(files => {
@@ -103,13 +92,6 @@ class GitHub {
 				} else {
 					return module;
 				}
-			});
-	}
-	readBlob(sha) {
-		return this.api("repos/JsOS-Team/NPI-pkg/git/blobs/" + sha)
-			.then(blob => {
-				blob.content = Buffer.from(blob.content, blob.encoding);
-				return blob;
 			});
 	}
 	readTree(sha) {
