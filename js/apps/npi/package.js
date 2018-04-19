@@ -1,10 +1,14 @@
 const GitHub = require("./github");
+const GitLab = require("./gitlab");
 
 class Package {
 	constructor(name) {
 		this.name = name;
 		this.installationStopped = false;
+
+		this.backend = "github";
 		this.github = new GitHub();
+		this.gitlab = new GitLab();
 	}
 
 	getInfo() {
@@ -13,34 +17,56 @@ class Package {
 		};
 		let pkg;
 
-		// Get package
-		return this.github.readDir("packages")
+		return Promise.resolve()
+			.then(() => {
+				// Get package
+				if(this.backend === "github") {
+					return this.github.readDir("packages");
+				} else if(this.backend === "gitlab") {
+					return this.gitlab.readDir("packages");
+				}
+			})
 			.then(packages => {
 				pkg = packages.find(file => file.name === this.name);
 				if(!pkg) {
 					throw new Error("Package not found");
 				}
-				info.url = pkg.html_url;
+
+				if(this.backend === "github") {
+					info.url = pkg.html_url;
+				} else if(this.backend === "gitlab") {
+					info.url = "https://gitlab.com/JsOS/NPI-pkg/tree/master/packages/" + this.name;
+				}
+
 				info.sha = pkg.sha;
 
-				// Get module
-				return this.github.readModule(`packages/${this.name}`)
-					.then(module => {
-						info.module = module.submodule_git_url;
-					}, () => {
-						info.module = null;
-					});
+				info.module = null;
+				if(this.backend === "github") {
+					// Get module
+					return this.github.readModule(`packages/${this.name}`)
+						.then(module => {
+							info.module = module.submodule_git_url;
+						}, () => {
+							info.module = null;
+						});
+				}
 			})
 			.then(() => {
 				// Read files
-				return this.github.readTree(pkg.sha);
+				if(this.backend === "github") {
+					return this.github.readTree(pkg.sha);
+				} else if(this.backend === "gitlab") {
+					return this.gitlab.readDirRecursively(`packages/${this.name}`);
+				}
 			}).then(tree => {
 				info.files = 0;
-				info.size = 0;
-				tree.tree.forEach(file => {
+				info.size = this.backend === "github" ? 0 : null;
+				(tree.tree || tree).forEach(file => {
 					if(file.type === "blob") {
 						info.files++;
-						info.size += file.size;
+						if(this.backend === "github") {
+							info.size += file.size;
+						}
 					}
 				});
 			})
@@ -50,14 +76,23 @@ class Package {
 	install(io) {
 		this.installationStopped = false;
 
-		io.writeLine("Getting information");
-		return this.getInfo()
+		return Promise.resolve()
+			.then(() => {
+				if(this.backend === "github") {
+					io.writeLine("Getting information");
+					return this.getInfo();
+				}
+			})
 			.then(info => {
 				io.writeLine("Gathering package");
-				return this.github.readTree(info.sha);
+				if(this.backend === "github") {
+					return this.github.readTree(info.sha);
+				} else if(this.backend === "gitlab") {
+					return this.gitlab.readDirRecursively(`packages/${this.name}`)
+				}
 			})
 			.then(tree => {
-				return Promise.all(tree.tree.map(file => this.installFile(file, io)))
+				return Promise.all((tree.tree || tree).map(file => this.installFile(file, io)))
 					.catch(e => {
 						this.installationStopped = true;
 						throw e;
@@ -89,13 +124,19 @@ class Package {
 
 		io.writeLine("Downloading " + file.path);
 
-		return this.github.readFilePages(`packages/${this.name}/${file.path}`)
+		return this.github.readFilePages(this.backend === "gitlab" ? file.path : `packages/${this.name}/${file.path}`)
 			.then(code => {
 				if(this.installationStopped) {
 					return;
 				}
 
-				require.register(`/node_modules/npi/${this.name}/${file.path}`, code);
+				let path = file.path;
+				if(this.backend === "gitlab") {
+					path = path.replace(/^packages\//, "");
+				} else {
+					path = `${this.name}/${path}`;
+				}
+				require.register(`/node_modules/npi/${path}`, code);
 				io.writeLine("Installed " + file.path);
 			});
 	}
