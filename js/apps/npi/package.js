@@ -99,6 +99,16 @@ class Package {
 				}
 			});
 	}
+	readModule(path) {
+		return this.gitHubApi("repos/JsOS-Team/NPI-pkg/contents/" + path)
+			.then(module => {
+				if(module.type !== "submodule") {
+					throw new Error(path + " is not a module");
+				} else {
+					return module;
+				}
+			});
+	}
 	readBlob(sha) {
 		return this.gitHubApi("repos/JsOS-Team/NPI-pkg/git/blobs/" + sha)
 			.then(blob => {
@@ -130,9 +140,9 @@ class Package {
 				info.sha = pkg.sha;
 
 				// Get module
-				return this.readFile(`packages/${this.name}/module`)
+				return this.readModule(`packages/${this.name}`)
 					.then(module => {
-						info.module = module.content.toString("ascii");
+						info.module = module.submodule_git_url;
 					}, () => {
 						info.module = null;
 					});
