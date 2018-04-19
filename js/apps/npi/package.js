@@ -2,11 +2,11 @@ const GitHub = require("./github");
 const GitLab = require("./gitlab");
 
 class Package {
-	constructor(name) {
+	constructor(name, backend="github") {
 		this.name = name;
 		this.installationStopped = false;
 
-		this.backend = "github";
+		this.backend = backend;
 		this.github = new GitHub();
 		this.gitlab = new GitLab();
 	}
